@@ -1,0 +1,101 @@
+Sub PlotAPTData()
+    
+    Dim selectedRange As Range
+    Set selectedRange = Selection
+    
+    ' Define variables for chart data and title
+    Dim chartDataRange As Range
+    Dim chartTitle As String
+    Dim maValue As Double
+    
+    ' Iterate through each cell in the selected range
+    For Each cell In selectedRange.Cells
+        ' Get the row of the current cell
+        Dim currentRow As Long
+        currentRow = cell.Row
+        
+        ' Iterate through each column in the row
+        Dim currentCol As Long
+        For currentCol = 1 To ActiveSheet.Cells(currentRow, Columns.Count).End(xlToLeft).Column
+            ' Check if the column header contains "Apt"
+            If InStr(1, ActiveSheet.Cells(1, currentCol).Value, "Apt", vbTextCompare) > 0 Then
+                ' Get the data range for the current row and column
+                Dim dataRange As Range
+                Set dataRange = Range(Cells(currentRow, currentCol), Cells(currentRow, currentCol))
+                
+                ' Check if there is a value in the "MA (mm)" column
+                
+                ' Add the data for the current row and column to the chart data range
+                If chartDataRange Is Nothing Then
+                    Set chartDataRange = dataRange.Cells(1, 1)
+                Else
+                    Set chartDataRange = Union(chartDataRange, dataRange.Cells(1, 1))
+                End If
+                
+             ' Get the headers for the columns with the desired information
+             Dim patientIDHeader As String
+             Dim testNameHeader As String
+             Dim testInfoHeader As String
+             patientIDHeader = "Patient ID"
+             testNameHeader = "Test Name"
+             testInfoHeader = "Test Information"
+             
+             ' Get the column numbers for the headers
+             Dim patientIDCol As Long
+             Dim testNameCol As Long
+             Dim testInfoCol As Long
+             patientIDCol = WorksheetFunction.Match(patientIDHeader, Range("1:1"), 0)
+             testNameCol = WorksheetFunction.Match(testNameHeader, Range("1:1"), 0)
+             testInfoCol = WorksheetFunction.Match(testInfoHeader, Range("1:1"), 0)
+             
+             ' Get the patient ID, test name, and test information for the current row
+             Dim patientID As String
+             Dim testName As String
+             Dim testInfo As String
+             patientID = Range(Cells(currentRow, patientIDCol), Cells(currentRow, patientIDCol)).Value
+             testName = Range(Cells(currentRow, testNameCol), Cells(currentRow, testNameCol)).Value
+             testInfo = Range(Cells(currentRow, testInfoCol), Cells(currentRow, testInfoCol)).Value
+            
+                
+                chartTitle = patientID & " " & testName & " " & testInfo
+            End If
+        Next currentCol
+        
+    Next cell
+    
+    ' Create the chart
+    If Not chartDataRange Is Nothing Then
+        ' Create a new worksheet for the chart
+        Dim chartSheet As Worksheet
+        Set chartSheet = ThisWorkbook.Sheets.Add
+        
+        ' Create the chart object
+        Dim chartObject As chartObject
+        Set chartObject = chartSheet.ChartObjects.Add(Left:=10, Width:=500, Top:=10, Height:=300)
+        
+        ' Set the chart data range and chart type
+        chartObject.Chart.SetSourceData chartDataRange
+        chartObject.Chart.ChartType = xlLine
+        
+        ' Set the chart title
+        chartObject.Chart.HasTitle = True
+        chartObject.Chart.chartTitle.Text = chartTitle
+
+        ' Set the X and Y axis labels
+        chartObject.Chart.Axes(xlCategory).HasTitle = True
+        chartObject.Chart.Axes(xlCategory).AxisTitle.Text = "apt number"
+        chartObject.Chart.Axes(xlValue).HasTitle = True
+        chartObject.Chart.Axes(xlValue).AxisTitle.Text = "MA (mm)"
+        Dim seriesName As String
+        'seriesName = chartTitle & " - " & ActiveSheet.Cells(1, currentCol).Value
+        Dim series As series
+        Set series = chartObject.Chart.SeriesCollection(1)
+        series.Name = chartTitle
+        ' Add the MA value to the chart if applicable
+        End If
+    ' Resize the chart area to fit the chart
+    chartObject.Chart.ChartArea.Height = chartObject.Height
+    chartObject.Chart.ChartArea.Width = chartObject.Width
+        
+
+End Sub
